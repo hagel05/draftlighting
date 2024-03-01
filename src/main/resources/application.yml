@@ -1,0 +1,12 @@
+# application.properties
+spring:
+  application:
+    name: draftlighting
+
+server:
+  port: 8282
+
+# ST API settings
+smartthings:
+  url: ${SMARTTHINGS_URI}:https://api.smartthings.com/v1/
+  pat: ${SMARTTHINGS_PAT}

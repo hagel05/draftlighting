@@ -1,0 +1,9 @@
+# application.properties
+spring:
+  application:
+    name: draftlighting
+
+# ST API settings
+smartthings:
+  url: "https://api.smartthings.com/v1/"
+  pat: faketoken
