@@ -8,5 +8,9 @@ server:
 
 # ST API settings
 smartthings:
-  url: ${SMARTTHINGS_URI}:https://api.smartthings.com/v1/
+  url: ${SMARTTHINGS_URI:https://api.smartthings.com/v1/}
   pat: ${SMARTTHINGS_PAT}
+
+# ESPN Sports Core settings
+espn:
+  url: ${ESPN_URI:https://sports.core.api.espn.com/v2/}

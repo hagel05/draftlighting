@@ -1,4 +1,4 @@
-package hagelbrand.draftlighting.clients;
+package hagelbrand.draftlighting.model.smartthings;
 
 import java.util.List;
 

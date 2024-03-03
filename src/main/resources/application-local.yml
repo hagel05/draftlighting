@@ -7,3 +7,7 @@ spring:
 smartthings:
   url: "https://api.smartthings.com/v1/"
   pat: faketoken
+
+# ESPN Sports Core settings
+espn:
+  url: ${ESPN_URI:https://sports.core.api.espn.com/v2/}

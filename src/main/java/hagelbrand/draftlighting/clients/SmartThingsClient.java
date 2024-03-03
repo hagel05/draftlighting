@@ -10,6 +10,9 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import hagelbrand.draftlighting.config.SmartThingsConfig;
+import hagelbrand.draftlighting.model.smartthings.ColorControlCapability;
+import hagelbrand.draftlighting.model.smartthings.Commands;
+import hagelbrand.draftlighting.model.smartthings.SwitchCapability;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
@@ -26,7 +29,6 @@ public class SmartThingsClient implements SmartThingsLighting {
     public SmartThingsClient(SmartThingsConfig config) {
         this.smartThingsConfig = config;
     }
-    public static String url = "https://api.smartthings.com/v1/";
     // TODO: Device api is /devices/{deviceId}/commands
 
     private final HttpClient client = HttpClient.newBuilder().build();
@@ -35,19 +37,19 @@ public class SmartThingsClient implements SmartThingsLighting {
     public void turnOn() throws IOException, InterruptedException {
         // TODO: Refactor to take a device list and send a list of commands
         String deviceId = "088796e1-4072-4528-a854-1a1d8b9c097d";
-        Commands commands = new Commands(List.of(new SwitchCapability(SwitchCapability.Switch.ON).command));
+        Commands commands = new Commands(List.of(new SwitchCapability(SwitchCapability.Switch.ON).getCommand()));
         sendDeviceCommands(deviceId, commands);
     }
     @Override
     public void turnOff() throws IOException, InterruptedException {
         String deviceId = "088796e1-4072-4528-a854-1a1d8b9c097d";
-        Commands commands = new Commands(List.of(new SwitchCapability(SwitchCapability.Switch.OFF).command));
+        Commands commands = new Commands(List.of(new SwitchCapability(SwitchCapability.Switch.OFF).getCommand()));
         sendDeviceCommands(deviceId, commands);
     }
     @Override
     public void setColor() throws IOException, InterruptedException {
         String deviceId = "088796e1-4072-4528-a854-1a1d8b9c097d";
-        Commands commands = new Commands(List.of(new ColorControlCapability(0, 100).command));
+        Commands commands = new Commands(List.of(new ColorControlCapability(0, 100).getCommand()));
         sendDeviceCommands(deviceId, commands);
     }
 
@@ -57,8 +59,8 @@ public class SmartThingsClient implements SmartThingsLighting {
         String commandJson = objectMapper.writeValueAsString(commands);
         System.out.println(commandJson);
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url + "devices/" + deviceId + "/commands"))
-                .header("authorization", "Bearer REDACTED")
+                .uri(URI.create(smartThingsConfig.getUrl() + "devices/" + deviceId + "/commands"))
+                .header("authorization", "Bearer " + smartThingsConfig.getPat())
                 .POST(HttpRequest.BodyPublishers.ofString(commandJson))
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
