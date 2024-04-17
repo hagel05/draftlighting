@@ -2,19 +2,20 @@ package hagelbrand.draftlighting.clients;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hagelbrand.draftlighting.config.ESPNConfig;
-import hagelbrand.draftlighting.model.espn.Draft;
-import hagelbrand.draftlighting.model.espn.Picks;
+import hagelbrand.draftlighting.model.PickResponse;
+import hagelbrand.draftlighting.model.espn.Draft.Draft;
+import hagelbrand.draftlighting.model.espn.Draft.Picks;
+import hagelbrand.draftlighting.model.espn.Team.Team;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 public class ESPNSportsCoreClient {
     private final ESPNConfig espnConfig;
@@ -27,25 +28,62 @@ public class ESPNSportsCoreClient {
 
     private final HttpClient client = HttpClient.newBuilder().build();
 
-    public void getDraft(int season) throws InterruptedException, IOException {
+    public Draft getDraft(int season) throws InterruptedException, IOException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(espnConfig.getUrl() + "sports/football/leagues/nfl/seasons/" + season + "/draft/rounds"))
                 .GET()
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        System.out.println(response.body());
-        System.out.println(response);
+        return parseResponse(response, Draft.class);
     }
 
-    public void getOnTheClockPick(int season) throws IOException, InterruptedException {
+    public PickResponse getOnTheClockPick(int season) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(espnConfig.getUrl() + "sports/football/leagues/nfl/seasons/" + season + "/draft/rounds"))
                 .GET()
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        Draft draft = parseResponse(response, Draft.class);
+
+        Optional<Picks> overallPick = draft.getItems().stream()
+                .flatMap(rounds -> rounds.getPicks().stream())
+                .filter(picks -> picks.getStatus().getName().contains("ON_THE_CLOCK"))
+                .findFirst();
+        overallPick.orElseThrow(() -> new NoSuchElementException("Overall pick not found in this draft"));
+        String teamUrl = overallPick.get().getTeam().$ref;
+        request = HttpRequest.newBuilder()
+                .uri(URI.create(String.valueOf(teamUrl)))
+                .GET()
+                .build();
+        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        Team team = parseResponse(response, Team.class);
+        return new PickResponse(overallPick.get(), team);
     }
 
-    public void getSpecificOverallPick(int season, int pick) throws IOException, InterruptedException {
+    public PickResponse getLastPick(int season) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(espnConfig.getUrl() + "sports/football/leagues/nfl/seasons/" + season + "/draft/rounds"))
+                .GET()
+                .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        Draft draft = parseResponse(response, Draft.class);
+
+        Optional<Picks> lastPick = draft.getItems().stream()
+                .flatMap(rounds -> rounds.getPicks().stream())
+                .filter(picks -> picks.getStatus().getName().contains("ON_THE_CLOCK"))
+                .reduce((first, last) -> last);
+        lastPick.orElseThrow(() -> new NoSuchElementException("Overall pick not found in this draft"));
+        String teamUrl = lastPick.get().getTeam().$ref;
+        request = HttpRequest.newBuilder()
+                .uri(URI.create(String.valueOf(teamUrl)))
+                .GET()
+                .build();
+        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        Team team = parseResponse(response, Team.class);
+        return new PickResponse(lastPick.get(), team);
+    }
+
+    public PickResponse getSpecificOverallPick(int season, int pick) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(espnConfig.getUrl() + "sports/football/leagues/nfl/seasons/" + season + "/draft/rounds"))
                 .GET()
@@ -57,10 +95,38 @@ public class ESPNSportsCoreClient {
                 .flatMap(rounds -> rounds.getPicks().stream())
                 .filter(picks -> picks.getOverall() == pick)
                 .findFirst();
-        overallPick.ifPresentOrElse(
-                foundPick -> System.out.println(foundPick.overall + " :: Round " + foundPick.round + " :: Pick " + foundPick.pick),
-                () -> System.out.println("Not found!")
-        );
+        overallPick.orElseThrow(() -> new NoSuchElementException("Overall pick not found in this draft"));
+        String teamUrl = overallPick.get().getTeam().$ref;
+        request = HttpRequest.newBuilder()
+                .uri(URI.create(String.valueOf(teamUrl)))
+                .GET()
+                .build();
+        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        Team team = parseResponse(response, Team.class);
+        System.out.println(team.displayName);
+        return new PickResponse(overallPick.get(), team);
+    }
+    public Team getTeamForSpecificPick(int season, int pick) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(espnConfig.getUrl() + "sports/football/leagues/nfl/seasons/" + season + "/draft/rounds"))
+                .GET()
+                .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        Draft draft = parseResponse(response, Draft.class);
+
+        Optional<Picks> overallPick = draft.getItems().stream()
+                .flatMap(rounds -> rounds.getPicks().stream())
+                .filter(picks -> picks.getOverall() == pick)
+                .findFirst();
+        overallPick.orElseThrow(() -> new NoSuchElementException("Overall pick not found in this draft"));
+        String teamUrl = overallPick.get().getTeam().$ref;
+        request = HttpRequest.newBuilder()
+                .uri(URI.create(String.valueOf(teamUrl)))
+                .GET()
+                .build();
+        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        Team team = parseResponse(response, Team.class);
+        return team;
     }
 
 

@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Import;
 interface SmartThingsLighting {
     void turnOn() throws IOException, InterruptedException;
     void turnOff() throws IOException, InterruptedException;
-    void setColor() throws IOException, InterruptedException;
+    void setColor(int hue, int saturation, String deviceId) throws IOException, InterruptedException;
 }
 @Import(SmartThingsConfig.class)
 public class SmartThingsClient implements SmartThingsLighting {
@@ -47,9 +47,8 @@ public class SmartThingsClient implements SmartThingsLighting {
         sendDeviceCommands(deviceId, commands);
     }
     @Override
-    public void setColor() throws IOException, InterruptedException {
-        String deviceId = "088796e1-4072-4528-a854-1a1d8b9c097d";
-        Commands commands = new Commands(List.of(new ColorControlCapability(0, 100).getCommand()));
+    public void setColor(int hue, int saturation, String deviceId) throws IOException, InterruptedException {
+        Commands commands = new Commands(List.of(new ColorControlCapability(hue, saturation).getCommand()));
         sendDeviceCommands(deviceId, commands);
     }
 

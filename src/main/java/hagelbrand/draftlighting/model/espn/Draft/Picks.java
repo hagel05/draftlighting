@@ -1,4 +1,4 @@
-package hagelbrand.draftlighting.model.espn;
+package hagelbrand.draftlighting.model.espn.Draft;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;

@@ -12,4 +12,9 @@ public class ColorControlCapability {
         this.command = new Command("colorControl", "setColor", hue, saturation);
     }
 
+    public ColorControlCapability(Map<String, Integer> color) {
+        this.color = color;
+        this.command = new Command("colorControl", "setColor", color.get("hue"), color.get("saturation"));
+    }
+
 }

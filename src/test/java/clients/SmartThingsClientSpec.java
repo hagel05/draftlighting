@@ -21,6 +21,6 @@ public class SmartThingsClientSpec {
     @Test
     public void testSetColorSmartLight() throws Exception {
         SmartThingsClient smartThingsClient = new SmartThingsClient(config);
-        smartThingsClient.setColor();
+        smartThingsClient.setColor(0, 100, "088796e1-4072-4528-a854-1a1d8b9c097d");
     }
 }
