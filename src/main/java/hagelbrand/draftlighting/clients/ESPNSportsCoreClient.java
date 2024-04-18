@@ -6,7 +6,6 @@ import hagelbrand.draftlighting.model.PickResponse;
 import hagelbrand.draftlighting.model.espn.Draft.Draft;
 import hagelbrand.draftlighting.model.espn.Draft.Picks;
 import hagelbrand.draftlighting.model.espn.Team.Team;
-import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;

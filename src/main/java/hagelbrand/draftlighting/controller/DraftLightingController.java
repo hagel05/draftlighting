@@ -7,7 +7,6 @@ import hagelbrand.draftlighting.config.SmartThingsConfig;
 import hagelbrand.draftlighting.model.DraftLighting.SimulateDraft;
 import hagelbrand.draftlighting.model.PickResponse;
 import hagelbrand.draftlighting.model.espn.Draft.Draft;
-import hagelbrand.draftlighting.model.espn.Draft.Picks;
 import hagelbrand.draftlighting.model.espn.Team.Team;
 import hagelbrand.draftlighting.service.DraftLightingService;
 import lombok.Getter;
@@ -18,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.net.http.HttpResponse;
+
 import java.util.NoSuchElementException;
 
 @Slf4j
