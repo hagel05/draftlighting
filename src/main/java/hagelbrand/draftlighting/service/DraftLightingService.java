@@ -15,8 +15,14 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+
+interface DraftLightingServiceInterface {
+    void simulateDraft(int year, ArrayList<String> deviceIds) throws IOException, InterruptedException;
+    void startDraft(int year, ArrayList<String> deviceIds) throws IOException, InterruptedException;
+
+}
 @Service
-public class DraftLightingService {
+public class DraftLightingService implements DraftLightingServiceInterface {
     ESPNSportsCoreClient espnSportsCoreClient;
     SmartThingsClient smartThingsClient;
     @Autowired
@@ -25,6 +31,7 @@ public class DraftLightingService {
         this.smartThingsClient = new SmartThingsClient(smartThingsConfig);
     }
     @Async
+    @Override
     public void simulateDraft(int year, ArrayList<String> deviceIds) throws IOException, InterruptedException {
         TeamColorUtil teamColorUtil = new TeamColorUtil();
         int overallPick = 1;
@@ -47,6 +54,7 @@ public class DraftLightingService {
     }
 
     @Async
+    @Override
     public void startDraft(int year, ArrayList<String> deviceIds) throws IOException, InterruptedException {
         PickResponse lastOnTheClockPick = null;
         String teamabv = "";
@@ -67,7 +75,7 @@ public class DraftLightingService {
         }
     }
 
-    public void setLightToOnTheClockTeamColor(int year) throws IOException, InterruptedException {
+    private void setLightToOnTheClockTeamColor(int year) throws IOException, InterruptedException {
         PickResponse pick = espnSportsCoreClient.getOnTheClockPick(year);
         // TODO: Make this take an actual team url to just call the api
         Team team = pick.getTeam();
@@ -84,7 +92,7 @@ public class DraftLightingService {
         smartThingsClient.setColor(69, 100, "088796e1-4072-4528-a854-1a1d8b9c097d");
     }
 
-    public void setLightToPickColor(int year, int overallPick) throws IOException, InterruptedException {
+    private void setLightToPickColor(int year, int overallPick) throws IOException, InterruptedException {
         // TODO:  This isn't entirely functionally correct.  The Zigbee spec discusses how to convert this to the correct values.
         /**
          * From those docs: This cluster provides an interface for changing the color of a light. Color is specified according to the
