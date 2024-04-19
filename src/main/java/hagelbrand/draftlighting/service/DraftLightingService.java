@@ -7,6 +7,7 @@ import hagelbrand.draftlighting.config.SmartThingsConfig;
 import hagelbrand.draftlighting.model.PickResponse;
 import hagelbrand.draftlighting.model.espn.Team.Team;
 import hagelbrand.draftlighting.util.TeamColorUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -14,19 +15,24 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+
+interface DraftLightingServiceInterface {
+    void simulateDraft(int year, ArrayList<String> deviceIds) throws IOException, InterruptedException;
+    void startDraft(int year, ArrayList<String> deviceIds) throws IOException, InterruptedException;
+
+}
 @Service
-public class DraftLightingService {
-    // TODO: it would be better to have a context to pass around, but this works for now
-    ESPNConfig espnConfig;
-    SmartThingsConfig smartThingsConfig;
+public class DraftLightingService implements DraftLightingServiceInterface {
+    ESPNSportsCoreClient espnSportsCoreClient;
+    SmartThingsClient smartThingsClient;
+    @Autowired
     public DraftLightingService(ESPNConfig espnConfig, SmartThingsConfig smartThingsConfig) {
-        this.espnConfig = espnConfig;
-        this.smartThingsConfig = smartThingsConfig;
+        this.espnSportsCoreClient = new ESPNSportsCoreClient(espnConfig);
+        this.smartThingsClient = new SmartThingsClient(smartThingsConfig);
     }
     @Async
+    @Override
     public void simulateDraft(int year, ArrayList<String> deviceIds) throws IOException, InterruptedException {
-        ESPNSportsCoreClient espnSportsCoreClient = new ESPNSportsCoreClient(espnConfig);
-        SmartThingsClient smartThingsClient = new SmartThingsClient(smartThingsConfig);
         TeamColorUtil teamColorUtil = new TeamColorUtil();
         int overallPick = 1;
         PickResponse pick = espnSportsCoreClient.getSpecificOverallPick(year, overallPick);
@@ -48,9 +54,8 @@ public class DraftLightingService {
     }
 
     @Async
+    @Override
     public void startDraft(int year, ArrayList<String> deviceIds) throws IOException, InterruptedException {
-        ESPNSportsCoreClient espnSportsCoreClient = new ESPNSportsCoreClient(espnConfig);
-        SmartThingsClient smartThingsClient = new SmartThingsClient(smartThingsConfig);
         PickResponse lastOnTheClockPick = null;
         String teamabv = "";
         PickResponse lastPick = espnSportsCoreClient.getLastPick(year);
@@ -70,13 +75,11 @@ public class DraftLightingService {
         }
     }
 
-    public void setLightToOnTheClockTeamColor(int year) throws IOException, InterruptedException {
-        ESPNSportsCoreClient espnSportsCoreClient = new ESPNSportsCoreClient(espnConfig);
+    private void setLightToOnTheClockTeamColor(int year) throws IOException, InterruptedException {
         PickResponse pick = espnSportsCoreClient.getOnTheClockPick(year);
         // TODO: Make this take an actual team url to just call the api
         Team team = pick.getTeam();
         System.out.println(team.displayName);
-        SmartThingsClient smartThingsClient = new SmartThingsClient(smartThingsConfig);
         Color color = new Color(Integer.parseInt(team.getColor(), 16));
         int intValue = Integer.parseInt(team.getColor(), 16);
 
@@ -89,18 +92,16 @@ public class DraftLightingService {
         smartThingsClient.setColor(69, 100, "088796e1-4072-4528-a854-1a1d8b9c097d");
     }
 
-    public void setLightToPickColor(int year, int overallPick) throws IOException, InterruptedException {
+    private void setLightToPickColor(int year, int overallPick) throws IOException, InterruptedException {
         // TODO:  This isn't entirely functionally correct.  The Zigbee spec discusses how to convert this to the correct values.
         /**
          * From those docs: This cluster provides an interface for changing the color of a light. Color is specified according to the
          * Commission Internationale de l'Éclairage (CIE) specification CIE 1931 Color Space, [I1]. Color control is
          * carried out in terms of x,y values, as defined by this specification.
          **/
-        ESPNSportsCoreClient espnSportsCoreClient = new ESPNSportsCoreClient(espnConfig);
         // TODO: Make this take an actual team url to just call the api
         Team team = espnSportsCoreClient.getTeamForSpecificPick(year, overallPick);
         System.out.println(team.displayName);
-        SmartThingsClient smartThingsClient = new SmartThingsClient(smartThingsConfig);
         Color color = new Color(Integer.parseInt(team.getColor(), 16));
         int intValue = Integer.parseInt(team.getColor(), 16);
 
